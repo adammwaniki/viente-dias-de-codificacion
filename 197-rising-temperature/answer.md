@@ -1,21 +1,15 @@
 # Answer
 <!--
 Algorithm:
-- Use a WITH and a common table expression
-    - A common table expression (CTE) is a named temporary result set that exists within the scope of a single statement and that can be referred to later within that statement, possibly multiple times
-- Inside this CTE we can obtain the temperature and use LAG or LEAD to compare the current temperature value to either the previous temperature value or the next temperature value respectively
-- recordDate is a unique and ordered value ,therefore, we can ORDER BY it
-- else we could just order by id if autoincrementing
+- Use an alias for the table e.g. w1 and w2
+- For each record w1, we find a matching row w2 where recordDate is one day before
+- Then we compare their temperatures
+- Only if the previous day exists, and the current temp is higher, we include the record
+- This allows us to pass cases where the recorded dates may have gaps e.g. 2000-12-14, 2000-12-16; date 15 is missing hence should return nothing even if temp on 16 > 14
 -->
 
-WITH CTE AS (
-  SELECT
-    id,
-    temperature,
-    LAG(temperature) OVER (ORDER BY recordDate) AS prev_temperature
-  FROM weather
-)
-SELECT
-  id
-FROM CTE
-WHERE temperature > prev_temperature;
+SELECT w1.id AS Id
+FROM weather w1
+JOIN weather w2
+  ON DATE_SUB(w1.recordDate, INTERVAL 1 DAY) = w2.recordDate
+WHERE w1.temperature > w2.temperature;
